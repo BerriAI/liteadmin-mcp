@@ -117,7 +117,12 @@ class Gateway:
             raise AdminError("Gateway returned an invalid JSON response." + uncertain, 502) from None
 
     async def authorize(self, credential: str) -> str:
-        data = await self._request("GET", "/user/info", credential)
+        try:
+            data = await self._request("GET", "/user/info", credential)
+        except AdminError as exc:
+            if exc.status != 404:
+                raise
+            data = None
         user = data.get("user_info") if isinstance(data, dict) else None
         if (not isinstance(user, dict) or user.get("user_role") != "proxy_admin"
                 or not isinstance(user.get("user_id"), str) or not user["user_id"]

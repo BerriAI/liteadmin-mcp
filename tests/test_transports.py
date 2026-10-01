@@ -44,6 +44,7 @@ async def test_streamable_http_rejects_anonymous_and_keeps_callers_separate(stub
                 assert (await anonymous.get(base + "/healthz")).status_code == 200
                 assert (await anonymous.post(base + "/mcp", json={})).status_code == 401
                 assert (await anonymous.post(base + "/mcp", json={}, headers={"Authorization": "Bearer viewer"})).status_code == 403
+                assert (await anonymous.post(base + "/mcp", json={}, headers={"Authorization": "Bearer team-key"})).status_code == 403
             for credential in ("alice-admin", "bob-admin"):
                 async with httpx2.AsyncClient(headers={"Authorization": "Bearer " + credential}) as client:
                     async with streamable_http_client(base + "/mcp", http_client=client) as (read, write):
