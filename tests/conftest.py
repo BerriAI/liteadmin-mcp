@@ -57,6 +57,8 @@ class StubGateway:
     def handle(self, request):
         self.requests.append(request)
         token = request.headers.get("authorization", "").removeprefix("Bearer ")
+        if request.url.path == "/user/info" and token == "team-key":
+            return httpx2.Response(404, json={"error": {"message": "User None not found"}})
         if request.url.path == "/user/info":
             role = "proxy_admin" if token in {"alice-admin", "bob-admin"} and token not in self.revoked else "internal_user"
             return httpx2.Response(200, json={"user_id": token, "user_info": {"user_id": token, "user_role": role}})
