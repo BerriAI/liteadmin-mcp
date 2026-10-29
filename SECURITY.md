@@ -4,7 +4,16 @@ The server targets one operator-configured gateway. A tool cannot change that
 target, invent an administrative route, forward arbitrary headers, or follow an
 HTTP redirect. It exposes only reviewed operations present in the gateway's spec.
 
-Local stdio runs with the administrator's configured gateway credential. Hosted
+Local stdio runs with the administrator's configured gateway credential or, when
+none is configured, one from the gateway's browser sign-in. That sign-in uses PKCE
+with a loopback redirect on 127.0.0.1, accepts only the pending request's state
+(at the loopback listener or in an address the user pastes back as `callback_url`
+when the browser runs on another computer), redeems the code only with that
+request's PKCE verifier, and sends nothing to endpoints outside the configured gateway's origin. The
+resulting access and refresh tokens are kept in an owner-only file (mode 0600 in a
+0700 directory on macOS and Linux; Windows ignores those modes, so there the file
+relies on the user profile's permissions) keyed by gateway origin. A sign-in the gateway still rejects after
+one renewal is revoked and removed. Hosted
 HTTP requests require each caller's own bearer credential; the server refuses
 to start HTTP mode with a process-wide gateway key. The gateway's live proxy-admin
 role is checked for discovery, before execution and before returning results.
@@ -47,7 +56,8 @@ server. The LiteLLM Admin Agent maintains its own request journal.
 
 Terminate TLS at a trusted proxy for remote deployment. Exclude authorization
 headers and request/response bodies from proxy logs. The process logs no tool
-arguments or results. Credentials are neither persisted nor placed in URLs.
+arguments or results. The HTTP service persists no credentials, and credentials
+are never placed in URLs.
 
 Report vulnerabilities using this repository's private Security Advisories when
 available or your established private contact with Berri AI. Do not include live
